@@ -1,0 +1,108 @@
+---
+title: "Lab Week 9 Part 1"
+author: "Craig Kopulsky"
+date: "12/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(palmerpenguins)
+library(GGally)
+library(stargazer)
+```
+
+# Visual Data Exploration
+
+Creating data exploration charts
+```{r}
+penguins %>% 
+  ggpairs(aes(color = species))
+```
+
+When considering collinearity we are usually concerned with continuous predictor variables, so we can further restrict this. Note the Simpson’s paradox examples here!
+
+```{r}
+penguins %>% 
+  select(species, bill_length_mm:body_mass_g) %>% 
+  ggpairs(aes(color = species))
+```
+
+# Comparing regression models
+
+Here, we are going to compare different versions of a regression model with penguin mass as the dependent variable in each. DISCLAIMER: If we were doing this in the wild, we’d need to do a lot of background research to understand conceptually which variables should be included and why. As we are (probably) not penguin experts, we will pretend we’ve already done that extensive research and exploration to justify variable selection.
+
+The 4 model versions we will compare for this exercise are:
+
+    Penguin Mass ~ Flipper Length + Species
+    Penguin Mass ~ Flipper Length + Species + Sex
+    Penguin Mass ~ Flipper Length + Species + Sex + Bill Length
+    Penguin Mass ~ Flipper Length + Species + Sex + Bill Length + Island
+
+Create the 4 models in your code as follows:
+
+```{r}
+lm1 <- lm(body_mass_g ~ flipper_length_mm + species, data = penguins)
+lm1
+
+lm2 <- lm(body_mass_g ~ flipper_length_mm + species + sex, data = penguins)
+lm2
+
+lm3 <- lm(body_mass_g ~ flipper_length_mm + species + sex + bill_length_mm, data = penguins)
+lm3
+
+lm4 <- lm(body_mass_g ~ flipper_length_mm + species + sex + bill_length_mm + island, data = penguins)
+lm4
+```
+
+
+Summaries to check R squared value
+```{r}
+summary(lm1)
+
+summary(lm2)
+
+summary(lm3)
+
+summary(lm4)
+```
+
+## Find the AIC value for each model
+```{r}
+AIC(lm1)
+AIC(lm2)
+AIC(lm3) # Lowest AIC Value
+AIC(lm4)
+```
+
+## Use stargazer package for a table with multiple model outputs
+
+```{r, results = 'asis'}
+stargazer(lm1, lm3, lm4, type = "html")
+```
+
+
+## Omitted variable bias
+
+```{r}
+ggplot(data = penguins, aes(x = flipper_length_mm, y = bill_depth_mm)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+ggplot(data = penguins, aes(x = flipper_length_mm,
+                            y = bill_depth_mm,
+                            group = species)) + # grouping by species
+  geom_point(aes(color = species)) +
+  geom_smooth(method = "lm")
+```
+
+
+
+
+
+
+
+
